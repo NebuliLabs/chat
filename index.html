@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nebuli Chat</title>
+  <style>
+    :root {
+      --bg-color: #f0f0f0;
+      --text-color: #222;
+      --text-secondary: #666;
+      --accent-color: #555;
+      --notif-color: #d33;
+      --input-bg: #fff;
+      --input-border: #ccc;
+      --button-bg: #e0e0e0;
+      --button-hover-bg: #d4d4d4;
+      --shadow: rgba(0,0,0,0.1);
+    }
+
+    body {
+      font-family: "Trebuchet MS", Verdana, Geneva, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      background: var(--button-bg);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 4px var(--shadow);
+    }
+
+    header h1 {
+      margin: 0;
+      font-weight: bold;
+      font-size: 1.4rem;
+      letter-spacing: 1px;
+      color: var(--accent-color);
+    }
+
+    #account-btn {
+      background: var(--button-bg);
+      border: 1px solid var(--input-border);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-color);
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    #account-btn:hover {
+      background: var(--button-hover-bg);
+    }
+
+    #account-menu {
+      position: absolute;
+      top: 48px;
+      right: 24px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      box-shadow: 0 4px 10px var(--shadow);
+      width: 320px;
+      padding: 20px;
+      display: none;
+      z-index: 100;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 8px 10px;
+      margin-top: 6px;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      background: var(--input-bg);
+      font-size: 1rem;
+      color: var(--text-color);
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus, input[type="password"]:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 4px var(--accent-color);
+    }
+
+    button {
+      font-family: inherit;
+      font-weight: 600;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      padding: 8px 14px;
+      cursor: pointer;
+      background: var(--button-bg);
+      color: var(--text-color);
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: var(--button-hover-bg);
+    }
+
+    .google-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      background: white;
+      color: #444;
+      border-radius: 6px;
+      user-select: none;
+    }
+    .google-btn svg {
+      width: 18px;
+      height: 18px;
+      vertical-align: middle;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--input-border);
+      margin: 18px 0 12px 0;
+    }
+
+    #signed-in-view, #signed-out-view {
+      font-size: 1rem;
+      color: var(--text-color);
+    }
+
+    #display-username {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--accent-color);
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    #main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      height: calc(100vh - 72px);
+      background: #fff;
+    }
+
+    #sidebar {
+      width: 260px;
+      background: #e7e7e7;
+      border-right: 1px solid var(--input-border);
+      padding: 16px 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    #chat-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    #chat-toggle button {
+      flex: 1;
+      padding: 10px 0;
+      border: none;
+      background: var(--button-bg);
+      color: var(--text-color);
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    #chat-toggle button.active, #chat-toggle button:hover {
+      background: var(--accent-color);
+      color: #fff;
+    }
+
+    #dm-popup {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 6px var(--shadow);
+      max-height: 400px;
+      overflow-y: auto;
+      user-select: none;
+    }
+    #dm-popup strong {
+      color: var(--accent-color);
+      font-weight: 700;
+    }
+
+    #recent-dms button, #dm-list button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 8px 10px;
+      background: var(--button-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      margin-bottom: 6px;
+      position: relative;
+      font-weight: 600;
+      color: var(--text-color);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #recent-dms button:hover, #dm-list button:hover {
+      background: var(--accent-color);
+      color: #fff;
+    }
+
+    .notif-dot {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--notif-color);
+      display: none;
+    }
+
+    #chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--input-bg);
+      padding: 20px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fff;
+      color: var(--text-color);
+      font-size: 0.95rem;
+      line-height: 1.4;
+      box-shadow: inset 0 0 6px var(--shadow);
+      user-select: text;
+    }
+
+    .message {
+      margin-bottom: 12px;
+      word-wrap: break-word;
+    }
+    .message strong {
+      color: var(--accent-color);
+    }
+    .message span {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-left: 6px;
+    }
+
+    #message-form {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+    }
+    #message-input {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--input-border);
+      font-size: 1rem;
+      color: var(--text-color);
+      background: var(--input-bg);
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    #message-input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 6px var(--accent-color);
+    }
+
+    #send-btn {
+      background: var(--button-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-weight: 700;
+      color: var(--text-color);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #send-btn:hover:not(:disabled) {
+      background: var(--accent-color);
+      color: #fff;
+    }
+    #send-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    @media (max-width: 720px) {
+      #sidebar {
+        width: 200px;
+        padding: 12px;
+      }
+      #account-menu {
+        width: 90vw;
+        right: 5vw;
+        top: 48px;
+      }
+      #chat-toggle button {
+        font-size: 0.9rem;
+        padding: 8px 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>nebuli chat</h1>
+    <button id="account-btn" title="Account menu">Account</button>
+  </header>
+<div id="dev-popup" style="
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+">
+  <div style="
+    background: #222;
+    padding: 20px 30px;
+    border-radius: 8px;
+    text-align: center;
+    color: white;
+    font-family: 'Trebuchet MS', sans-serif;
+    max-width: 300px;
+  ">
+    <p>This site is still in development</p>
+    <button id="dev-popup-ok" style="
+      margin-top: 15px;
+      padding: 8px 20px;
+      border: none;
+      border-radius: 5px;
+      background: #555;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+    ">Okay</button>
+  </div>
+</div>
+
+  <div id="account-menu" role="dialog" aria-modal="true" aria-labelledby="account-btn" tabindex="-1">
+    <div id="signed-out-view">
+      <label for="username-input">Username</label>
+      <input type="text" id="username-input" autocomplete="username" />
+      <label for="password-input">Password</label>
+      <input type="password" id="password-input" autocomplete="current-password" />
+      <div style="display: flex; gap: 10px; justify-content: space-between; margin-top: 12px;">
+        <button id="signup-btn">Sign Up</button>
+        <button id="login-btn">Log In</button>
+        <button id="signup-google-btn" class="google-btn" aria-label="Sign up with Google">
+          <svg viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg"><path fill="#4285f4" d="M533.5 278.4c0-18.6-1.5-36.5-4.3-53.9H272.1v102h147.7c-6.3 34-25 62.9-53.8 82v68h86.9c50.7-46.7 81.6-115.3 81.6-198.1z"/><path fill="#34a853" d="M272.1 544.3c72.4 0 133.3-23.9 177.7-64.8l-86.9-68c-24.1 16.2-55 25.6-90.8 25.6-69.8 0-128.9-47.1-150.3-110.2H33.6v69.3c44.1 87.1 134.6 148.1 238.5 148.1z"/><path fill="#fbbc04" d="M121.8 324.9c-10.6-31.8-10.6-66 0-97.8V157.8H33.6c-38.8 75.3-38.8 164.7 0 240z"/><path fill="#ea4335" d="M272.1 107.7c39.4-.6 77.6 14.4 106.6 41.4l79.7-79.7C397.3 24.9 340 2.7 272.1 3 168.2 3 77.7 64 33.6 151.1l88.2 69z"/></svg>
+          Google
+        </button>
+      </div>
+      <hr />
+      <div style="font-size: 0.85rem; color: var(--text-secondary);">
+        * Your username is not an email, just a plain unique name.
+      </div>
+    </div>
+
+    <div id="signed-in-view" style="display:none;">
+      <strong id="display-username">Username</strong>
+      <label for="edit-username-input" style="margin-top: 14px;">Edit Username</label>
+      <input type="text" id="edit-username-input" autocomplete="username" />
+      <div style="display: flex; justify-content: space-between; margin-top: 16px;">
+        <button id="save-username-btn">Save Username</button>
+        <button id="logout-btn">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="main">
+    <aside id="sidebar" aria-label="Chat sidebar">
+      <nav id="chat-toggle" role="tablist" aria-label="Chat types">
+        <button id="public-chat-btn" role="tab" aria-selected="true" tabindex="0" class="active">Public Chat</button>
+        <button id="dm-chat-btn" role="tab" aria-selected="false" tabindex="-1">Direct Messages
+          <span id="dm-main-notif-dot" class="notif-dot" aria-label="Unread DM notifications"></span>
+        </button>
+      </nav>
+
+      <div id="dm-popup" aria-live="polite" aria-atomic="true" aria-relevant="additions" role="region" aria-label="Direct Messages panel">
+        <div><strong>You've Messaged</strong></div>
+        <div id="recent-dms" role="list" aria-label="Recent direct message contacts"></div>
+        <div style="margin-top: 16px;"><strong>Search All Users</strong></div>
+        <input type="text" id="dm-search" aria-label="Search usernames" placeholder="Search username..." autocomplete="off" />
+        <div id="dm-list" role="list" aria-label="Search results"></div>
+      </div>
+    </aside>
+
+    <section id="chat-area" aria-live="polite" aria-atomic="false" role="main">
+      <div id="messages" tabindex="0" aria-label="Chat messages"></div>
+
+      <form id="message-form" aria-label="Send message form">
+        <input id="message-input" type="text" autocomplete="off" aria-required="true" placeholder="Type your message..." />
+        <button id="send-btn" type="submit" disabled>Send</button>
+      </form>
+    </section>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getDatabase, ref, push, onChildAdded, set, get, child, onValue, remove
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signInWithPopup,
+      GoogleAuthProvider,
+      signOut,
+      onAuthStateChanged,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+     const popup = document.getElementById('dev-popup');
+  const btn = document.getElementById('dev-popup-ok');
+
+  btn.addEventListener('click', () => {
+    popup.style.display = 'none';
+  });
+    const firebaseConfig = {
+      apiKey: "AIzaSyBheSIy74__oYgZ9cbVy4HGVwFdNOiPLic",
+      authDomain: "nebuli-chats.firebaseapp.com",
+      projectId: "nebuli-chats",
+      storageBucket: "nebuli-chats.appspot.com",
+      messagingSenderId: "749468581885",
+      appId: "1:749468581885:web:106e4610f2443110e26394",
+      databaseURL: "https://nebuli-chats-default-rtdb.firebaseio.com/"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    const accountBtn = document.getElementById("account-btn");
+    const accountMenu = document.getElementById("account-menu");
+    const signedOutView = document.getElementById("signed-out-view");
+    const signedInView = document.getElementById("signed-in-view");
+
+    const usernameInput = document.getElementById("username-input");
+    const passwordInput = document.getElementById("password-input");
+    const signupBtn = document.getElementById("signup-btn");
+    const loginBtn = document.getElementById("login-btn");
+    const signupGoogleBtn = document.getElementById("signup-google-btn");
+
+    const displayUsername = document.getElementById("display-username");
+    const editUsernameInput = document.getElementById("edit-username-input");
+    const saveUsernameBtn = document.getElementById("save-username-btn");
+    const logoutBtn = document.getElementById("logout-btn");
+
+    const publicChatBtn = document.getElementById("public-chat-btn");
+    const dmChatBtn = document.getElementById("dm-chat-btn");
+    const dmPopup = document.getElementById("dm-popup");
+    const recentDMsContainer = document.getElementById("recent-dms");
+    const dmSearchInput = document.getElementById("dm-search");
+    const dmList = document.getElementById("dm-list");
+    const dmMainNotifDot = document.getElementById("dm-main-notif-dot");
+
+    const messagesDiv = document.getElementById("messages");
+    const messageForm = document.getElementById("message-form");
+    const messageInput = document.getElementById("message-input");
+    const sendBtn = document.getElementById("send-btn");
+
+    let currentUser = null;
+    let currentUID = null;
+    let currentUsername = null;
+    let currentChatKey = "public";
+    let dmNotifications = {};
+    let dmCurrentChatUID = null;
+
+    function escapeHtml(text) {
+      return text.replace(/[&<>"']/g, (match) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[match]);
+    }
+
+    accountBtn.addEventListener("click", () => {
+      accountMenu.style.display = accountMenu.style.display === "block" ? "none" : "block";
+    });
+
+    document.body.addEventListener("click", e => {
+      if (!accountMenu.contains(e.target) && e.target !== accountBtn) {
+        accountMenu.style.display = "none";
+      }
+    });
+
+    signupBtn.addEventListener("click", async () => {
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+      if (!username || !password) {
+        alert("Please enter username and password.");
+        return;
+      }
+      try {
+
+        const email = username + "@nebuli.fake";
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        currentUser = cred.user;
+        currentUID = currentUser.uid;
+        currentUsername = username;
+        await set(ref(db, `usernames/${currentUID}`), username);
+        await updateProfile(currentUser, { displayName: username });
+        postLoginSetup();
+      } catch (err) {
+        alert("Sign up failed: " + err.message);
+      }
+    });
+
+    loginBtn.addEventListener("click", async () => {
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+      if (!username || !password) {
+        alert("Please enter username and password.");
+        return;
+      }
+      try {
+        const email = username + "@nebuli.fake";
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        currentUser = cred.user;
+        currentUID = currentUser.uid;
+        const snap = await get(ref(db, `usernames/${currentUID}`));
+        currentUsername = snap.val() || username;
+        postLoginSetup();
+      } catch (err) {
+        alert("Login failed: " + err.message);
+      }
+    });
+ signupGoogleBtn.addEventListener("click", async () => {
+      try {
+        const cred = await signInWithPopup(auth, googleProvider);
+        currentUser = cred.user;
+        currentUID = currentUser.uid;
+        currentUsername = currentUser.displayName || "User";
+        await set(ref(db, `usernames/${currentUID}`), currentUsername);
+        postLoginSetup();
+      } catch (err) {
+        alert("Google sign-in failed: " + err.message);
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      currentUser = null;
+      currentUID = null;
+      currentUsername = null;
+      accountMenu.style.display = "none";
+      showSignedOutView();
+      switchToChat("public");
+      loadPublicChat();
+    });
+ saveUsernameBtn.addEventListener("click", async () => {
+      const newUsername = editUsernameInput.value.trim();
+      if (!newUsername) {
+        alert("Username cannot be empty.");
+        return;
+      }
+      try {
+        await set(ref(db, `usernames/${currentUID}`), newUsername);
+        currentUsername = newUsername;
+        await updateProfile(currentUser, { displayName: newUsername });
+        displayUsername.textContent = newUsername;
+        alert("Username updated!");
+      } catch (err) {
+        alert("Failed to update username: " + err.message);
+      }
+    });
+
+    function postLoginSetup() {
+      displayUsername.textContent = currentUsername;
+      editUsernameInput.value = currentUsername;
+      signedOutView.style.display = "none";
+      signedInView.style.display = "block";
+      accountBtn.textContent = currentUsername;
+      accountMenu.style.display = "none";
+      loadPublicChat();
+      setupDMFeatures();
+      checkDMNotifications();
+    }
+
+    function showSignedOutView() {
+      signedOutView.style.display = "block";
+      signedInView.style.display = "none";
+      accountBtn.textContent = "Account";
+    }
+    
+ publicChatBtn.addEventListener("click", () => {
+      currentChatKey = "public";
+      publicChatBtn.classList.add("active");
+      dmChatBtn.classList.remove("active");
+      dmPopup.style.display = "none";
+      loadPublicChat();
+    });
+
+    dmChatBtn.addEventListener("click", () => {
+      publicChatBtn.classList.remove("active");
+      dmChatBtn.classList.add("active");
+      dmPopup.style.display = dmPopup.style.display === "flex" ? "none" : "flex";
+      loadRecentDMs();
+    });
+
+    function loadPublicChat() {
+      messagesDiv.innerHTML = "";
+      const chatRef = ref(db, "chats/public");
+      onChildAdded(chatRef, snap => {
+        const msg = snap.val();
+        addMessageToBox(msg.username, msg.text, msg.time);
+      });
+    }
+
+    function listenMessages() {
+      if (currentChatKey === "public") return;
+      messagesDiv.innerHTML = "";
+      const chatRef = ref(db, `chats/dm/${currentChatKey}`);
+      onChildAdded(chatRef, snap => {
+        const msg = snap.val();
+        addMessageToBox(msg.username, msg.text, msg.time);
+      });
+    }
+
+    function addMessageToBox(username, text, time) {
+      const div = document.createElement("div");
+      div.classList.add("message");
+      const timeStr = new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      div.innerHTML = `<strong>${escapeHtml(username)}</strong> <span>${timeStr}</span><br>${escapeHtml(text)}`;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+ messageInput.addEventListener("input", () => {
+      sendBtn.disabled = messageInput.value.trim() === "";
+    });
+
+ messageForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      if (!currentUser) {
+        alert("Please log in first.");
+        return;
+      }
+      const text = messageInput.value.trim();
+      if (!text) return;
+      const time = Date.now();
+
+      if (currentChatKey === "public") {
+        const chatRef = ref(db, "chats/public");
+        await push(chatRef, {
+          username: currentUsername,
+          text,
+          time
+        });
+      } else {
+        if (!currentChatKey) {
+          alert("Select a DM chat first.");
+          return;
+        }
+        const chatRef = ref(db, `chats/dm/${currentChatKey}`);
+        await push(chatRef, {
+          username: currentUsername,
+          text,
+          time
+        });
+
+        const ids = currentChatKey.split("_");
+        const otherUID = ids[0] === currentUID ? ids[1] : ids[0];
+        await set(ref(db, `notifications/${otherUID}/${currentUID}`), {
+          from: currentUsername,
+          time
+        });
+      }
+      messageInput.value = "";
+      sendBtn.disabled = true;
+    });
+
+    function setupDMFeatures() {
+      loadRecentDMs();
+      checkDMNotifications();
+      dmSearchInput.value = "";
+      dmList.innerHTML = "";
+      dmCurrentChatUID = null;
+    }
+
+    function loadRecentDMs() {
+      get(ref(db, "chats/dm")).then(snap => {
+        const data = snap.val();
+        if (!data) {
+          recentDMsContainer.innerHTML = "<em>No recent DMs.</em>";
+          return;
+        }
+        const recentUIDs = new Set();
+        for (const key in data) {
+          if (key.includes(currentUID)) {
+            const uids = key.split("_");
+            const otherUID = uids[0] === currentUID ? uids[1] : uids[0];
+            recentUIDs.add(otherUID);
+          }
+        }
+        get(child(ref(db), "usernames")).then(namesSnap => {
+          const names = namesSnap.val() || {};
+          recentDMsContainer.innerHTML = "";
+          recentUIDs.forEach(uid => {
+            const uname = names[uid];
+            if (!uname) return;
+            const btn = document.createElement("button");
+            btn.textContent = uname;
+            btn.dataset.uid = uid;
+            btn.classList.remove("active");
+            const dot = document.createElement("span");
+            dot.className = "notif-dot";
+            btn.appendChild(dot);
+            if (dmNotifications[uid]) dot.style.display = "block";
+            btn.onclick = () => {
+              const chatKey = [currentUID, uid].sort().join("_");
+              currentChatKey = chatKey;
+              dmCurrentChatUID = uid;
+              switchToChat(chatKey);
+              dmPopup.style.display = "none";
+              clearDMNotification(uid);
+            };
+            recentDMsContainer.appendChild(btn);
+          });
+          updateDMMainNotifDot();
+        });
+      });
+    }
+
+    function switchToChat(chatKey) {
+      messagesDiv.innerHTML = "";
+      currentChatKey = chatKey;
+      listenMessages();
+    }
+
+    dmSearchInput.addEventListener("input", () => {
+      const query = dmSearchInput.value.toLowerCase();
+      dmList.innerHTML = "Searching...";
+      get(child(ref(db), "usernames")).then(snap => {
+        const data = snap.val() || {};
+        if (!data) return (dmList.innerHTML = "No users found.");
+        const filtered = Object.entries(data).filter(([uid, uname]) =>
+          uname.toLowerCase().includes(query) && uid !== currentUID
+        );
+        if (!filtered.length) return (dmList.innerHTML = "No Results Found");
+        dmList.innerHTML = "";
+        filtered.forEach(([uid, uname]) => {
+          const btn = document.createElement("button");
+          btn.textContent = uname;
+          btn.dataset.uid = uid;
+          const dot = document.createElement("span");
+          dot.className = "notif-dot";
+          btn.appendChild(dot);
+          if (dmNotifications[uid]) dot.style.display = "block";
+          btn.onclick = () => {
+            const chatKey = [currentUID, uid].sort().join("_");
+            currentChatKey = chatKey;
+            dmCurrentChatUID = uid;
+            switchToChat(chatKey);
+            dmPopup.style.display = "none";
+            clearDMNotification(uid);
+          };
+          dmList.appendChild(btn);
+        });
+      });
+    });
+
+    function checkDMNotifications() {
+      if (!currentUID) return;
+      const notifRef = ref(db, `notifications/${currentUID}`);
+      onValue(notifRef, snap => {
+        const data = snap.val() || {};
+        dmNotifications = { ...data };
+        updateDMButtons();
+        updateDMMainNotifDot();
+      });
+    }
+
+    function clearDMNotification(fromUID) {
+      if (!currentUID) return;
+      const notifRef = ref(db, `notifications/${currentUID}/${fromUID}`);
+      remove(notifRef);
+      delete dmNotifications[fromUID];
+      updateDMButtons();
+      updateDMMainNotifDot();
+    }
+
+    function updateDMButtons() {
+      [recentDMsContainer, dmList].forEach(container => {
+        if (!container) return;
+        [...container.children].forEach(btn => {
+          const uid = btn.dataset.uid;
+          const dot = btn.querySelector(".notif-dot");
+          if (dot) dot.style.display = dmNotifications[uid] ? "block" : "none";
+        });
+      });
+    }
+
+    function updateDMMainNotifDot() {
+      const hasAny = Object.keys(dmNotifications).length > 0;
+      dmMainNotifDot.style.display = hasAny ? "block" : "none";
+    }
+
+    onAuthStateChanged(auth, async user => {
+      if (user) {
+        currentUser = user;
+        currentUID = user.uid;
+        const snap = await get(child(ref(db), `usernames/${currentUID}`));
+        currentUsername = snap.val() || user.displayName || "User";
+        postLoginSetup();
+      } else {
+        currentUser = null;
+        currentUID = null;
+        currentUsername = null;
+        showSignedOutView();
+        loadPublicChat();
+        dmPopup.style.display = "none";
+        dmMainNotifDot.style.display = "none";
+      }
+    });
+
+    loadPublicChat();
+  </script>
+</body>
+</html>
