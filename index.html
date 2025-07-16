@@ -431,357 +431,326 @@
     </section>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getDatabase, ref, push, onChildAdded, set, get, child, onValue, remove
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      signInWithPopup,
-      GoogleAuthProvider,
-      signOut,
-      onAuthStateChanged,
-      updateProfile
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getDatabase, ref, push, onChildAdded, set, get, child, onValue, remove
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signInWithPopup,
+    GoogleAuthProvider,
+    signOut,
+    onAuthStateChanged,
+    updateProfile
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-     const popup = document.getElementById('dev-popup');
+  const popup = document.getElementById('dev-popup');
   const btn = document.getElementById('dev-popup-ok');
 
   btn.addEventListener('click', () => {
     popup.style.display = 'none';
   });
-    const firebaseConfig = {
-      apiKey: "AIzaSyBheSIy74__oYgZ9cbVy4HGVwFdNOiPLic",
-      authDomain: "nebuli-chats.firebaseapp.com",
-      projectId: "nebuli-chats",
-      storageBucket: "nebuli-chats.appspot.com",
-      messagingSenderId: "749468581885",
-      appId: "1:749468581885:web:106e4610f2443110e26394",
-      databaseURL: "https://nebuli-chats-default-rtdb.firebaseio.com/"
-    };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
-    const googleProvider = new GoogleAuthProvider();
+  // Base64 encoded API key
+  const encodedApiKey = "QUl6YVN5QmhlU0l5NzRfX29ZZ1o5Y2JWeTRIR1Z3RmROT2lQTGlj";
 
-    const accountBtn = document.getElementById("account-btn");
-    const accountMenu = document.getElementById("account-menu");
-    const signedOutView = document.getElementById("signed-out-view");
-    const signedInView = document.getElementById("signed-in-view");
+  // Decode base64 to string
+  const apiKey = atob(encodedApiKey);
 
-    const usernameInput = document.getElementById("username-input");
-    const passwordInput = document.getElementById("password-input");
-    const signupBtn = document.getElementById("signup-btn");
-    const loginBtn = document.getElementById("login-btn");
-    const signupGoogleBtn = document.getElementById("signup-google-btn");
+  const firebaseConfig = {
+    apiKey: apiKey,
+    authDomain: "nebuli-chats.firebaseapp.com",
+    projectId: "nebuli-chats",
+    storageBucket: "nebuli-chats.appspot.com",
+    messagingSenderId: "749468581885",
+    appId: "1:749468581885:web:106e4610f2443110e26394",
+    databaseURL: "https://nebuli-chats-default-rtdb.firebaseio.com/"
+  };
 
-    const displayUsername = document.getElementById("display-username");
-    const editUsernameInput = document.getElementById("edit-username-input");
-    const saveUsernameBtn = document.getElementById("save-username-btn");
-    const logoutBtn = document.getElementById("logout-btn");
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+  const googleProvider = new GoogleAuthProvider();
 
-    const publicChatBtn = document.getElementById("public-chat-btn");
-    const dmChatBtn = document.getElementById("dm-chat-btn");
-    const dmPopup = document.getElementById("dm-popup");
-    const recentDMsContainer = document.getElementById("recent-dms");
-    const dmSearchInput = document.getElementById("dm-search");
-    const dmList = document.getElementById("dm-list");
-    const dmMainNotifDot = document.getElementById("dm-main-notif-dot");
+  const accountBtn = document.getElementById("account-btn");
+  const accountMenu = document.getElementById("account-menu");
+  const signedOutView = document.getElementById("signed-out-view");
+  const signedInView = document.getElementById("signed-in-view");
 
-    const messagesDiv = document.getElementById("messages");
-    const messageForm = document.getElementById("message-form");
-    const messageInput = document.getElementById("message-input");
-    const sendBtn = document.getElementById("send-btn");
+  const usernameInput = document.getElementById("username-input");
+  const passwordInput = document.getElementById("password-input");
+  const signupBtn = document.getElementById("signup-btn");
+  const loginBtn = document.getElementById("login-btn");
+  const signupGoogleBtn = document.getElementById("signup-google-btn");
 
-    let currentUser = null;
-    let currentUID = null;
-    let currentUsername = null;
-    let currentChatKey = "public";
-    let dmNotifications = {};
-    let dmCurrentChatUID = null;
+  const displayUsername = document.getElementById("display-username");
+  const editUsernameInput = document.getElementById("edit-username-input");
+  const saveUsernameBtn = document.getElementById("save-username-btn");
+  const logoutBtn = document.getElementById("logout-btn");
 
-    function escapeHtml(text) {
-      return text.replace(/[&<>"']/g, (match) => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      })[match]);
-    }
+  const publicChatBtn = document.getElementById("public-chat-btn");
+  const dmChatBtn = document.getElementById("dm-chat-btn");
+  const dmPopup = document.getElementById("dm-popup");
+  const recentDMsContainer = document.getElementById("recent-dms");
+  const dmSearchInput = document.getElementById("dm-search");
+  const dmList = document.getElementById("dm-list");
+  const dmMainNotifDot = document.getElementById("dm-main-notif-dot");
 
-    accountBtn.addEventListener("click", () => {
-      accountMenu.style.display = accountMenu.style.display === "block" ? "none" : "block";
-    });
+  const messagesDiv = document.getElementById("messages");
+  const messageForm = document.getElementById("message-form");
+  const messageInput = document.getElementById("message-input");
+  const sendBtn = document.getElementById("send-btn");
 
-    document.body.addEventListener("click", e => {
-      if (!accountMenu.contains(e.target) && e.target !== accountBtn) {
-        accountMenu.style.display = "none";
-      }
-    });
+  let currentUser = null;
+  let currentUID = null;
+  let currentUsername = null;
+  let currentChatKey = "public";
+  let dmNotifications = {};
+  let dmCurrentChatUID = null;
 
-    signupBtn.addEventListener("click", async () => {
-      const username = usernameInput.value.trim();
-      const password = passwordInput.value;
-      if (!username || !password) {
-        alert("Please enter username and password.");
-        return;
-      }
-      try {
+  function escapeHtml(text) {
+    return text.replace(/[&<>"']/g, (match) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[match]);
+  }
 
-        const email = username + "@nebuli.fake";
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        currentUser = cred.user;
-        currentUID = currentUser.uid;
-        currentUsername = username;
-        await set(ref(db, `usernames/${currentUID}`), username);
-        await updateProfile(currentUser, { displayName: username });
-        postLoginSetup();
-      } catch (err) {
-        alert("Sign up failed: " + err.message);
-      }
-    });
+  accountBtn.addEventListener("click", () => {
+    accountMenu.style.display = accountMenu.style.display === "block" ? "none" : "block";
+  });
 
-    loginBtn.addEventListener("click", async () => {
-      const username = usernameInput.value.trim();
-      const password = passwordInput.value;
-      if (!username || !password) {
-        alert("Please enter username and password.");
-        return;
-      }
-      try {
-        const email = username + "@nebuli.fake";
-        const cred = await signInWithEmailAndPassword(auth, email, password);
-        currentUser = cred.user;
-        currentUID = currentUser.uid;
-        const snap = await get(ref(db, `usernames/${currentUID}`));
-        currentUsername = snap.val() || username;
-        postLoginSetup();
-      } catch (err) {
-        alert("Login failed: " + err.message);
-      }
-    });
- signupGoogleBtn.addEventListener("click", async () => {
-      try {
-        const cred = await signInWithPopup(auth, googleProvider);
-        currentUser = cred.user;
-        currentUID = currentUser.uid;
-        currentUsername = currentUser.displayName || "User";
-        await set(ref(db, `usernames/${currentUID}`), currentUsername);
-        postLoginSetup();
-      } catch (err) {
-        alert("Google sign-in failed: " + err.message);
-      }
-    });
-
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      currentUser = null;
-      currentUID = null;
-      currentUsername = null;
+  document.body.addEventListener("click", e => {
+    if (!accountMenu.contains(e.target) && e.target !== accountBtn) {
       accountMenu.style.display = "none";
-      showSignedOutView();
-      switchToChat("public");
-      loadPublicChat();
-    });
- saveUsernameBtn.addEventListener("click", async () => {
-      const newUsername = editUsernameInput.value.trim();
-      if (!newUsername) {
-        alert("Username cannot be empty.");
-        return;
-      }
-      try {
-        await set(ref(db, `usernames/${currentUID}`), newUsername);
-        currentUsername = newUsername;
-        await updateProfile(currentUser, { displayName: newUsername });
-        displayUsername.textContent = newUsername;
-        alert("Username updated!");
-      } catch (err) {
-        alert("Failed to update username: " + err.message);
-      }
-    });
-
-    function postLoginSetup() {
-      displayUsername.textContent = currentUsername;
-      editUsernameInput.value = currentUsername;
-      signedOutView.style.display = "none";
-      signedInView.style.display = "block";
-      accountBtn.textContent = currentUsername;
-      accountMenu.style.display = "none";
-      loadPublicChat();
-      setupDMFeatures();
-      checkDMNotifications();
     }
+  });
 
-    function showSignedOutView() {
-      signedOutView.style.display = "block";
-      signedInView.style.display = "none";
-      accountBtn.textContent = "Account";
+  signupBtn.addEventListener("click", async () => {
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+    if (!username || !password) {
+      alert("Please enter username and password.");
+      return;
     }
-    
- publicChatBtn.addEventListener("click", () => {
-      currentChatKey = "public";
-      publicChatBtn.classList.add("active");
-      dmChatBtn.classList.remove("active");
-      dmPopup.style.display = "none";
-      loadPublicChat();
-    });
+    try {
+      const email = username + "@nebuli.fake";
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      currentUser = cred.user;
+      currentUID = currentUser.uid;
+      currentUsername = username;
+      await set(ref(db, `usernames/${currentUID}`), username);
+      await updateProfile(currentUser, { displayName: username });
+      postLoginSetup();
+    } catch (err) {
+      alert("Sign up failed: " + err.message);
+    }
+  });
 
-    dmChatBtn.addEventListener("click", () => {
-      publicChatBtn.classList.remove("active");
-      dmChatBtn.classList.add("active");
-      dmPopup.style.display = dmPopup.style.display === "flex" ? "none" : "flex";
-      loadRecentDMs();
-    });
+  loginBtn.addEventListener("click", async () => {
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+    if (!username || !password) {
+      alert("Please enter username and password.");
+      return;
+    }
+    try {
+      const email = username + "@nebuli.fake";
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      currentUser = cred.user;
+      currentUID = currentUser.uid;
+      const snap = await get(ref(db, `usernames/${currentUID}`));
+      currentUsername = snap.val() || username;
+      postLoginSetup();
+    } catch (err) {
+      alert("Login failed: " + err.message);
+    }
+  });
 
-    function loadPublicChat() {
-      messagesDiv.innerHTML = "";
+  signupGoogleBtn.addEventListener("click", async () => {
+    try {
+      const cred = await signInWithPopup(auth, googleProvider);
+      currentUser = cred.user;
+      currentUID = currentUser.uid;
+      currentUsername = currentUser.displayName || "User";
+      await set(ref(db, `usernames/${currentUID}`), currentUsername);
+      postLoginSetup();
+    } catch (err) {
+      alert("Google sign-in failed: " + err.message);
+    }
+  });
+
+  logoutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+    currentUser = null;
+    currentUID = null;
+    currentUsername = null;
+    accountMenu.style.display = "none";
+    showSignedOutView();
+    switchToChat("public");
+    loadPublicChat();
+  });
+
+  saveUsernameBtn.addEventListener("click", async () => {
+    const newUsername = editUsernameInput.value.trim();
+    if (!newUsername) {
+      alert("Username cannot be empty.");
+      return;
+    }
+    try {
+      await set(ref(db, `usernames/${currentUID}`), newUsername);
+      currentUsername = newUsername;
+      await updateProfile(currentUser, { displayName: newUsername });
+      displayUsername.textContent = newUsername;
+      alert("Username updated!");
+    } catch (err) {
+      alert("Failed to update username: " + err.message);
+    }
+  });
+
+  function postLoginSetup() {
+    displayUsername.textContent = currentUsername;
+    editUsernameInput.value = currentUsername;
+    signedOutView.style.display = "none";
+    signedInView.style.display = "block";
+    accountBtn.textContent = currentUsername;
+    accountMenu.style.display = "none";
+    loadPublicChat();
+    setupDMFeatures();
+    checkDMNotifications();
+  }
+
+  function showSignedOutView() {
+    signedOutView.style.display = "block";
+    signedInView.style.display = "none";
+    accountBtn.textContent = "Account";
+  }
+  
+  publicChatBtn.addEventListener("click", () => {
+    currentChatKey = "public";
+    publicChatBtn.classList.add("active");
+    dmChatBtn.classList.remove("active");
+    dmPopup.style.display = "none";
+    loadPublicChat();
+  });
+
+  dmChatBtn.addEventListener("click", () => {
+    publicChatBtn.classList.remove("active");
+    dmChatBtn.classList.add("active");
+    dmPopup.style.display = dmPopup.style.display === "flex" ? "none" : "flex";
+    loadRecentDMs();
+  });
+
+  function loadPublicChat() {
+    messagesDiv.innerHTML = "";
+    const chatRef = ref(db, "chats/public");
+    onChildAdded(chatRef, snap => {
+      const msg = snap.val();
+      addMessageToBox(msg.username, msg.text, msg.time);
+    });
+  }
+
+  function listenMessages() {
+    if (currentChatKey === "public") return;
+    messagesDiv.innerHTML = "";
+    const chatRef = ref(db, `chats/dm/${currentChatKey}`);
+    onChildAdded(chatRef, snap => {
+      const msg = snap.val();
+      addMessageToBox(msg.username, msg.text, msg.time);
+    });
+  }
+
+  function addMessageToBox(username, text, time) {
+    const div = document.createElement("div");
+    div.classList.add("message");
+    const timeStr = new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    div.innerHTML = `<strong>${escapeHtml(username)}</strong> <span>${timeStr}</span><br>${escapeHtml(text)}`;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  messageInput.addEventListener("input", () => {
+    sendBtn.disabled = messageInput.value.trim() === "";
+  });
+
+  messageForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    if (!currentUser) {
+      alert("Please log in first.");
+      return;
+    }
+    const text = messageInput.value.trim();
+    if (!text) return;
+    const time = Date.now();
+
+    if (currentChatKey === "public") {
       const chatRef = ref(db, "chats/public");
-      onChildAdded(chatRef, snap => {
-        const msg = snap.val();
-        addMessageToBox(msg.username, msg.text, msg.time);
+      await push(chatRef, {
+        username: currentUsername,
+        text,
+        time
       });
-    }
-
-    function listenMessages() {
-      if (currentChatKey === "public") return;
-      messagesDiv.innerHTML = "";
-      const chatRef = ref(db, `chats/dm/${currentChatKey}`);
-      onChildAdded(chatRef, snap => {
-        const msg = snap.val();
-        addMessageToBox(msg.username, msg.text, msg.time);
-      });
-    }
-
-    function addMessageToBox(username, text, time) {
-      const div = document.createElement("div");
-      div.classList.add("message");
-      const timeStr = new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      div.innerHTML = `<strong>${escapeHtml(username)}</strong> <span>${timeStr}</span><br>${escapeHtml(text)}`;
-      messagesDiv.appendChild(div);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
- messageInput.addEventListener("input", () => {
-      sendBtn.disabled = messageInput.value.trim() === "";
-    });
-
- messageForm.addEventListener("submit", async e => {
-      e.preventDefault();
-      if (!currentUser) {
-        alert("Please log in first.");
+    } else {
+      if (!currentChatKey) {
+        alert("Select a DM chat first.");
         return;
       }
-      const text = messageInput.value.trim();
-      if (!text) return;
-      const time = Date.now();
+      const chatRef = ref(db, `chats/dm/${currentChatKey}`);
+      await push(chatRef, {
+        username: currentUsername,
+        text,
+        time
+      });
 
-      if (currentChatKey === "public") {
-        const chatRef = ref(db, "chats/public");
-        await push(chatRef, {
-          username: currentUsername,
-          text,
-          time
-        });
-      } else {
-        if (!currentChatKey) {
-          alert("Select a DM chat first.");
-          return;
-        }
-        const chatRef = ref(db, `chats/dm/${currentChatKey}`);
-        await push(chatRef, {
-          username: currentUsername,
-          text,
-          time
-        });
-
-        const ids = currentChatKey.split("_");
-        const otherUID = ids[0] === currentUID ? ids[1] : ids[0];
-        await set(ref(db, `notifications/${otherUID}/${currentUID}`), {
-          from: currentUsername,
-          time
-        });
-      }
-      messageInput.value = "";
-      sendBtn.disabled = true;
-    });
-
-    function setupDMFeatures() {
-      loadRecentDMs();
-      checkDMNotifications();
-      dmSearchInput.value = "";
-      dmList.innerHTML = "";
-      dmCurrentChatUID = null;
-    }
-
-    function loadRecentDMs() {
-      get(ref(db, "chats/dm")).then(snap => {
-        const data = snap.val();
-        if (!data) {
-          recentDMsContainer.innerHTML = "<em>No recent DMs.</em>";
-          return;
-        }
-        const recentUIDs = new Set();
-        for (const key in data) {
-          if (key.includes(currentUID)) {
-            const uids = key.split("_");
-            const otherUID = uids[0] === currentUID ? uids[1] : uids[0];
-            recentUIDs.add(otherUID);
-          }
-        }
-        get(child(ref(db), "usernames")).then(namesSnap => {
-          const names = namesSnap.val() || {};
-          recentDMsContainer.innerHTML = "";
-          recentUIDs.forEach(uid => {
-            const uname = names[uid];
-            if (!uname) return;
-            const btn = document.createElement("button");
-            btn.textContent = uname;
-            btn.dataset.uid = uid;
-            btn.classList.remove("active");
-            const dot = document.createElement("span");
-            dot.className = "notif-dot";
-            btn.appendChild(dot);
-            if (dmNotifications[uid]) dot.style.display = "block";
-            btn.onclick = () => {
-              const chatKey = [currentUID, uid].sort().join("_");
-              currentChatKey = chatKey;
-              dmCurrentChatUID = uid;
-              switchToChat(chatKey);
-              dmPopup.style.display = "none";
-              clearDMNotification(uid);
-            };
-            recentDMsContainer.appendChild(btn);
-          });
-          updateDMMainNotifDot();
-        });
+      const ids = currentChatKey.split("_");
+      const otherUID = ids[0] === currentUID ? ids[1] : ids[0];
+      await set(ref(db, `notifications/${otherUID}/${currentUID}`), {
+        from: currentUsername,
+        time
       });
     }
+    messageInput.value = "";
+    sendBtn.disabled = true;
+  });
 
-    function switchToChat(chatKey) {
-      messagesDiv.innerHTML = "";
-      currentChatKey = chatKey;
-      listenMessages();
-    }
+  function setupDMFeatures() {
+    loadRecentDMs();
+    checkDMNotifications();
+    dmSearchInput.value = "";
+    dmList.innerHTML = "";
+    dmCurrentChatUID = null;
+  }
 
-    dmSearchInput.addEventListener("input", () => {
-      const query = dmSearchInput.value.toLowerCase();
-      dmList.innerHTML = "Searching...";
-      get(child(ref(db), "usernames")).then(snap => {
-        const data = snap.val() || {};
-        if (!data) return (dmList.innerHTML = "No users found.");
-        const filtered = Object.entries(data).filter(([uid, uname]) =>
-          uname.toLowerCase().includes(query) && uid !== currentUID
-        );
-        if (!filtered.length) return (dmList.innerHTML = "No Results Found");
-        dmList.innerHTML = "";
-        filtered.forEach(([uid, uname]) => {
+  function loadRecentDMs() {
+    get(ref(db, "chats/dm")).then(snap => {
+      const data = snap.val();
+      if (!data) {
+        recentDMsContainer.innerHTML = "<em>No recent DMs.</em>";
+        return;
+      }
+      const recentUIDs = new Set();
+      for (const key in data) {
+        if (key.includes(currentUID)) {
+          const uids = key.split("_");
+          const otherUID = uids[0] === currentUID ? uids[1] : uids[0];
+          recentUIDs.add(otherUID);
+        }
+      }
+      get(child(ref(db), "usernames")).then(namesSnap => {
+        const names = namesSnap.val() || {};
+        recentDMsContainer.innerHTML = "";
+        recentUIDs.forEach(uid => {
+          const uname = names[uid];
+          if (!uname) return;
           const btn = document.createElement("button");
           btn.textContent = uname;
           btn.dataset.uid = uid;
+          btn.classList.remove("active");
           const dot = document.createElement("span");
           dot.className = "notif-dot";
           btn.appendChild(dot);
@@ -794,66 +763,105 @@
             dmPopup.style.display = "none";
             clearDMNotification(uid);
           };
-          dmList.appendChild(btn);
+          recentDMsContainer.appendChild(btn);
         });
-      });
-    });
-
-    function checkDMNotifications() {
-      if (!currentUID) return;
-      const notifRef = ref(db, `notifications/${currentUID}`);
-      onValue(notifRef, snap => {
-        const data = snap.val() || {};
-        dmNotifications = { ...data };
-        updateDMButtons();
         updateDMMainNotifDot();
       });
-    }
+    });
+  }
 
-    function clearDMNotification(fromUID) {
-      if (!currentUID) return;
-      const notifRef = ref(db, `notifications/${currentUID}/${fromUID}`);
-      remove(notifRef);
-      delete dmNotifications[fromUID];
+  function switchToChat(chatKey) {
+    messagesDiv.innerHTML = "";
+    currentChatKey = chatKey;
+    listenMessages();
+  }
+
+  dmSearchInput.addEventListener("input", () => {
+    const query = dmSearchInput.value.toLowerCase();
+    dmList.innerHTML = "Searching...";
+    get(child(ref(db), "usernames")).then(snap => {
+      const data = snap.val() || {};
+      if (!data) return (dmList.innerHTML = "No users found.");
+      const filtered = Object.entries(data).filter(([uid, uname]) =>
+        uname.toLowerCase().includes(query) && uid !== currentUID
+      );
+      if (!filtered.length) return (dmList.innerHTML = "No Results Found");
+      dmList.innerHTML = "";
+      filtered.forEach(([uid, uname]) => {
+        const btn = document.createElement("button");
+        btn.textContent = uname;
+        btn.dataset.uid = uid;
+        const dot = document.createElement("span");
+        dot.className = "notif-dot";
+        btn.appendChild(dot);
+        if (dmNotifications[uid]) dot.style.display = "block";
+        btn.onclick = () => {
+          const chatKey = [currentUID, uid].sort().join("_");
+          currentChatKey = chatKey;
+          dmCurrentChatUID = uid;
+          switchToChat(chatKey);
+          dmPopup.style.display = "none";
+          clearDMNotification(uid);
+        };
+        dmList.appendChild(btn);
+      });
+    });
+  });
+
+  function checkDMNotifications() {
+    if (!currentUID) return;
+    const notifRef = ref(db, `notifications/${currentUID}`);
+    onValue(notifRef, snap => {
+      const data = snap.val() || {};
+      dmNotifications = { ...data };
       updateDMButtons();
       updateDMMainNotifDot();
-    }
-
-    function updateDMButtons() {
-      [recentDMsContainer, dmList].forEach(container => {
-        if (!container) return;
-        [...container.children].forEach(btn => {
-          const uid = btn.dataset.uid;
-          const dot = btn.querySelector(".notif-dot");
-          if (dot) dot.style.display = dmNotifications[uid] ? "block" : "none";
-        });
-      });
-    }
-
-    function updateDMMainNotifDot() {
-      const hasAny = Object.keys(dmNotifications).length > 0;
-      dmMainNotifDot.style.display = hasAny ? "block" : "none";
-    }
-
-    onAuthStateChanged(auth, async user => {
-      if (user) {
-        currentUser = user;
-        currentUID = user.uid;
-        const snap = await get(child(ref(db), `usernames/${currentUID}`));
-        currentUsername = snap.val() || user.displayName || "User";
-        postLoginSetup();
-      } else {
-        currentUser = null;
-        currentUID = null;
-        currentUsername = null;
-        showSignedOutView();
-        loadPublicChat();
-        dmPopup.style.display = "none";
-        dmMainNotifDot.style.display = "none";
-      }
     });
+  }
 
-    loadPublicChat();
-  </script>
-</body>
-</html>
+  function clearDMNotification(fromUID) {
+    if (!currentUID) return;
+    const notifRef = ref(db, `notifications/${currentUID}/${fromUID}`);
+    remove(notifRef);
+    delete dmNotifications[fromUID];
+    updateDMButtons();
+    updateDMMainNotifDot();
+  }
+
+  function updateDMButtons() {
+    [recentDMsContainer, dmList].forEach(container => {
+      if (!container) return;
+      [...container.children].forEach(btn => {
+        const uid = btn.dataset.uid;
+        const dot = btn.querySelector(".notif-dot");
+        if (dot) dot.style.display = dmNotifications[uid] ? "block" : "none";
+      });
+    });
+  }
+
+  function updateDMMainNotifDot() {
+    const hasAny = Object.keys(dmNotifications).length > 0;
+    dmMainNotifDot.style.display = hasAny ? "block" : "none";
+  }
+
+  onAuthStateChanged(auth, async user => {
+    if (user) {
+      currentUser = user;
+      currentUID = user.uid;
+      const snap = await get(child(ref(db), `usernames/${currentUID}`));
+      currentUsername = snap.val() || user.displayName || "User";
+      postLoginSetup();
+    } else {
+      currentUser = null;
+      currentUID = null;
+      currentUsername = null;
+      showSignedOutView();
+      loadPublicChat();
+      dmPopup.style.display = "none";
+      dmMainNotifDot.style.display = "none";
+    }
+  });
+
+  loadPublicChat();
+</script>
+  </html>
